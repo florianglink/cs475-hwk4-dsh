@@ -8,4 +8,7 @@
 #define MAXBUF 256
 #define HISTORY_LEN 100
 
-// TODO: Your function prototypes below
+int dsh_cd(char **args);
+int dsh_exit(char **args);
+int dsh_pwd();
+char *readLine();

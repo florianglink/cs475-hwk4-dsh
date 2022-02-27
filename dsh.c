@@ -79,7 +79,19 @@ void dsh_loop(void) {
     int conc;
 	char cmdline[MAXBUF]; // stores user input from commmand line
 
-	do {
+	 FILE* motd = fopen(".dsh_motd", "r");
+        char c;
+        if(motd != NULL) {
+            while(c != EOF) {
+                c = fgetc(motd);
+                if(c != EOF) {
+                    printf("%c", c);
+                }
+            }
+            printf("\n");
+            fclose(motd);
+        }
+    do {
 		printf("dsh> ");
 		fgets(cmdline, MAXBUF, stdin);
 		cmdline[strcspn(cmdline, "\n")] = 0;

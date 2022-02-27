@@ -46,7 +46,12 @@ int dsh_pwd(char **args) {
     return 1;
 }
 
-//Splits the user input into tokens for commands that require several arguments
+/**
+ * Splits the user input into tokens for commands that require several arguments
+ * @param line the input the user typed into the command line
+ * @return a pointer to an array of argument tokens which will then be passed to
+ * the execute function
+ */
 char **splitLine(char *line){
     int position = 0;
     char **tokens = (char**) malloc(64 * sizeof(char*));
@@ -73,13 +78,13 @@ char **splitLine(char *line){
     return tokens;
 }
 
-//Main loop to receive and execute user input
+//Main loop to prompt for user input
 void dsh_loop(void) {
     int status;
-    int conc;
+    int conc; //variable to keep track of whether to run command concurrently or not when passed to execute function
 	char cmdline[MAXBUF]; // stores user input from commmand line
 
-	 FILE* motd = fopen(".dsh_motd", "r");
+	 FILE* motd = fopen(".dsh_motd", "r"); //open the motd file if it exists
         char c;
         if(motd != NULL) {
             while(c != EOF) {
@@ -94,27 +99,33 @@ void dsh_loop(void) {
     do {
 		printf("dsh> ");
 		fgets(cmdline, MAXBUF, stdin);
-		cmdline[strcspn(cmdline, "\n")] = 0;
+		cmdline[strcspn(cmdline, "\n")] = 0; //remove trailing '\n' from fgets()
         size_t n = sizeof(cmdline)/sizeof(cmdline[0]);
-        if(cmdline[n] == '&') {
-            conc = 0;
+        if(cmdline[n] == '&') {  //check if user input ends with '&' to determine whether to
+            conc = 0;            //run their command concurrently or not
         }
         else {
             conc = 1;
         }
-		char **cmdarg = splitLine(cmdline);
+		char **cmdarg = splitLine(cmdline); //split input into tokens
         status = dsh_execute(cmdarg, conc);
 	} while(status);
 }
 
-//Executes the parsed commands from the user
+/**
+ * Accepts parsed user input and executes the given commnds
+ * @param args a pointer to the array of command tokens
+ * @param conc value to determine whether to launch a program concurrently with dsh or not. will either 
+ * be 0 or 1.
+ * @return status to keep the main loop going
+ */
 int dsh_execute(char **args, int conc) {
 
     if(args[0] == NULL) { //empty command entered, return 1 to keep loop running
         return 1;
     }
     cmd_t cmd = chkBuiltin(args[0]);
-    if(cmd != CMD_EXT) {
+    if(cmd != CMD_EXT) {              //check if command corresponds to a builtin function
 		if(cmd == CMD_CD) {
 			return dsh_cd(args);
 		}
@@ -125,12 +136,12 @@ int dsh_execute(char **args, int conc) {
 			return dsh_pwd(args);
 		}
 	}
-    if(conc == 0) {
-        return dsh_launch_conc(args);
+    if(conc == 0) {                   //command not a builtin, attempt to launch program using given arguments
+        return dsh_launch_conc(args); //launch and run concurrently with dsh
     }
     else {
-        return dsh_launch(args);
-    }
+        return dsh_launch(args);  //launch and wait for program to terminate before continuing dsh
+    } 
 }
 
 //Takes in the parsed arguments and attempts to execute them
